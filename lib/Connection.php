@@ -74,7 +74,6 @@ abstract class Connection
 	 */
 	static $PDO_OPTIONS = array(
 		PDO::ATTR_CASE => PDO::CASE_LOWER,
-		PDO::ATTR_TIMEOUT => 3,
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 		PDO::ATTR_ORACLE_NULLS => PDO::NULL_NATURAL,
 		PDO::ATTR_STRINGIFY_FETCHES => false);
@@ -104,7 +103,7 @@ abstract class Connection
 	{
 		$config = Config::instance();
 
-		if (strpos($connection_string_or_connection_name ?: '', '://') === false)
+		if (strpos($connection_string_or_connection_name, '://') === false)
 		{
 			$connection_string = $connection_string_or_connection_name ?
 				$config->get_connection($connection_string_or_connection_name) :
@@ -474,10 +473,6 @@ abstract class Connection
 	 */
 	public function datetime_to_string($datetime)
 	{
-		// 2022-06-26 : Just in case getting rid of DateTime works, and we get a string here (but the method should no longer be called in a perfect world)
-		if (is_string($datetime))
-			return $datetime;
-		
 		return $datetime->format(static::$datetime_format);
 	}
 
@@ -489,13 +484,13 @@ abstract class Connection
 	 */
 	public function string_to_datetime($string)
 	{
-		// 2022-06-26 : Get rid of DateTime
-		return $string;
-		/*
 		$date = date_create($string);
 		$errors = \DateTime::getLastErrors();
 
-		if ($errors['warning_count'] > 0 || $errors['error_count'] > 0)
+		if ($errors && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))
+			return null;
+
+		if (!$date)
 			return null;
 
 		$date_class = Config::instance()->get_date_class();
@@ -505,7 +500,6 @@ abstract class Connection
 			$date->format(static::DATETIME_TRANSLATE_FORMAT),
 			$date->getTimezone()
 		);
-		*/
 	}
 
 	/**

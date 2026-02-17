@@ -159,14 +159,12 @@ class Column
 		{
 			case self::STRING:	return (string)$value;
 			case self::INTEGER:	return static::castIntegerSafely($value);
-			case self::DECIMAL:	return (double)$value;
+			case self::DECIMAL:	return (float)$value;
 			case self::DATETIME:
 			case self::DATE:
 				if (!$value)
 					return null;
-				
-				// 2022-06-26 : Get rid of this pain in the foot that is the DateTime instance
-				/*
+
 				$date_class = Config::instance()->get_date_class();
 
 				if ($value instanceof $date_class)
@@ -180,7 +178,6 @@ class Column
 					);
 
 				return $connection->string_to_datetime($value);
-				*/
 		}
 		return $value;
 	}

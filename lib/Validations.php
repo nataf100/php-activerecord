@@ -905,7 +905,8 @@ class Errors implements IteratorAggregate
 	 *
 	 * @return ArrayIterator
 	 */
-	public function getIterator() : \Traversable
+	#[\ReturnTypeWillChange]
+	public function getIterator()
 	{
 		return new ArrayIterator($this->full_messages());
 	}

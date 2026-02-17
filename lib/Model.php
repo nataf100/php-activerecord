@@ -85,49 +85,49 @@ class Model
 	 *
 	 * @var array
 	 */
-	private array $attributes = array();
+	private $attributes = array();
 
 	/**
 	 * Flag whether or not this model's attributes have been modified since it will either be null or an array of column_names that have been modified
 	 *
 	 * @var array
 	 */
-	private ?array $__dirty = null;
+	private $__dirty = null;
 
 	/**
 	 * Flag that determines of this model can have a writer method invoked such as: save/update/insert/delete
 	 *
 	 * @var boolean
 	 */
-	private bool $__readonly = false;
+	private $__readonly = false;
 
 	/**
 	 * Array of relationship objects as model_attribute_name => relationship
 	 *
 	 * @var array
 	 */
-	private array $__relationships = array();
+	private $__relationships = array();
 
 	/**
 	 * Flag that determines if a call to save() should issue an insert or an update sql statement
 	 *
 	 * @var boolean
 	 */
-	private bool $__new_record = true;
+	private $__new_record = true;
 
 	/**
 	 * Set to the name of the connection this {@link Model} should use.
 	 *
 	 * @var string
 	 */
-	static string $connection;
+	static $connection;
 
 	/**
 	 * Set to the name of the database this Model's table is in.
 	 *
 	 * @var string
 	 */
-	static string $db;
+	static $db;
 
 	/**
 	 * Set this to explicitly specify the model's table name if different from inferred name.
@@ -137,35 +137,35 @@ class Model
 	 *
 	 * @var string
 	 */
-	static string $table_name;
+	static $table_name;
 
 	/**
 	 * Set this to override the default primary key name if different from default name of "id".
 	 *
 	 * @var string
 	 */
-	static string $primary_key;
+	static $primary_key;
 
 	/**
 	 * Set this to explicitly specify the sequence name for the table.
 	 *
 	 * @var string
 	 */
-	static string $sequence;
+	static $sequence;
 
 	/**
 	 * Set this to true in your subclass to use caching for this model.
 	 * Note that you must also configure a cache object.
 	 */
-	static bool $cache = false;
+	static $cache = false;
 
 	/**
 	 * Set this to specify an expiration period for this model.
 	 * If not set, the expire value you set in your cache options will be used.
 	 *
-	 * @var ?integer
+	 * @var integer
 	 */
-	static ?int $cache_expire = null;
+	static $cache_expire;
 
 	/**
 	 * Allows you to create aliases for attributes.
@@ -184,7 +184,7 @@ class Model
 	 *
 	 * @var array
 	 */
-	static array $alias_attribute = array();
+	static $alias_attribute = array();
 
 	/**
 	 * Whitelist of attributes that are checked from mass-assignment calls such as constructing a model or using update_attributes.
@@ -206,7 +206,7 @@ class Model
 	 *
 	 * @var array
 	 */
-	static array $attr_accessible = array();
+	static $attr_accessible = array();
 
 	/**
 	 * Blacklist of attributes that cannot be mass-assigned.
@@ -218,7 +218,7 @@ class Model
 	 *
 	 * @var array
 	 */
-	static array $attr_protected = array();
+	static $attr_protected = array();
 
 	/**
 	 * Delegates calls to a relationship.
@@ -242,7 +242,7 @@ class Model
 	 *
 	 * @var array
 	 */
-	static array $delegate = array();
+	static $delegate = array();
 
 	/**
 	 * Constructs a model.
@@ -464,16 +464,12 @@ class Model
 		// convert php's \DateTime to ours
 		if ($value instanceof \DateTime) {
 			$date_class = Config::instance()->get_date_class();
-			// 2022-06-26 : Get rid of DateTime...
-			$value = $value->format('Y-m-d H:i:s');
-			/*
 			if (!($value instanceof $date_class))
 				$value = $date_class::createFromFormat(
 					Connection::DATETIME_TRANSLATE_FORMAT,
 					$value->format(Connection::DATETIME_TRANSLATE_FORMAT),
 					$value->getTimezone()
 				);
-			*/
 		}
 
 		if ($value instanceof DateTimeInterface)
@@ -686,10 +682,10 @@ class Model
 	 */
 	private function is_delegated($name, &$delegate)
 	{
-		if (is_array($delegate) && !empty($delegate['prefix'])) // Fix array key "prefix" not found
+		if ($delegate['prefix'] != '')
 			$name = substr($name,strlen($delegate['prefix'])+1);
 
-		if (is_array($delegate) && !empty($delegate['delegate']) && in_array($name,$delegate['delegate']))
+		if (is_array($delegate) && in_array($name,$delegate['delegate']))
 			return $name;
 
 		return null;
@@ -1255,7 +1251,7 @@ class Model
 	 * @param $name of relationship for this table
 	 * @return void
 	 */
-	public function set_relationship_from_eager_load(Model $model=null, $name)
+	public function set_relationship_from_eager_load(?Model $model, $name)
 	{
 		$table = static::table();
 
@@ -1437,7 +1433,7 @@ class Model
 	 */
 	public static function all(/* ... */)
 	{
-		return call_user_func_array(static::class . '::find',array_merge(array('all'),func_get_args()));
+		return call_user_func_array(array(get_called_class(), 'find'),array_merge(array('all'),func_get_args()));
 	}
 
 	/**
@@ -1461,7 +1457,7 @@ class Model
 			if (is_hash($args[0]))
 				$options['conditions'] = $args[0];
 			else
-				$options['conditions'] = call_user_func_array(static::class . '::pk_conditions',$args);
+				$options['conditions'] = call_user_func_array('static::pk_conditions',$args);
 		}
 
 		$table = static::table();
@@ -1484,7 +1480,7 @@ class Model
 	 */
 	public static function exists(/* ... */)
 	{
-		return call_user_func_array(static::class . '::count',func_get_args()) > 0 ? true : false;
+		return call_user_func_array('static::count',func_get_args()) > 0 ? true : false;
 	}
 
 	/**
@@ -1495,7 +1491,7 @@ class Model
 	 */
 	public static function first(/* ... */)
 	{
-		return call_user_func_array(static::class . '::find',array_merge(array('first'),func_get_args()));
+		return call_user_func_array(array(get_called_class(), 'find'),array_merge(array('first'),func_get_args()));
 	}
 
 	/**
@@ -1506,7 +1502,7 @@ class Model
 	 */
 	public static function last(/* ... */)
 	{
-		return call_user_func_array(static::class . '::find',array_merge(array('last'),func_get_args()));
+		return call_user_func_array(array(get_called_class(), 'find'),array_merge(array('last'),func_get_args()));
 	}
 
 	/**
